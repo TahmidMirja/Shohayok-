@@ -1,11 +1,11 @@
 import { GoogleGenAI, FunctionDeclaration, Type, Content } from "@google/genai";
 import { Message, Role, UserPreferences, SimulatedToolCall } from '../types';
 
-// Robust API Key Retrieval
+// Vercel friendly API Key Retrieval
 const getApiKey = (): string => {
-  // Check window.process first (the polyfill), then global process
-  const key = (window as any).process?.env?.API_KEY || (typeof process !== 'undefined' ? process.env?.API_KEY : '');
-  return key || "AIzaSyDMosEPTs3tjlIRE0MWhho0TfgcBhDUzQU"; // Fallback to provided key
+  // Standard Next.js / Vercel pattern: process.env.NEXT_PUBLIC_API_KEY
+  // or your custom key from Vercel dashboard.
+  return process.env.NEXT_PUBLIC_API_KEY || process.env.API_KEY || "AIzaSyDMosEPTs3tjlIRE0MWhho0TfgcBhDUzQU";
 };
 
 // Tool Definitions
@@ -50,6 +50,7 @@ const createSystemPrompt = (prefs: UserPreferences): string => {
     SYSTEM IDENTITY:
     You are ${prefs.aiName}, a tactical holographic AI assistant.
     User: ${prefs.userName} (Admin).
+    Platform: Next.js Cloud Instance.
     
     PRIMARY PROTOCOL:
     1. LANGUAGE: Fluent Bangla (Bengali Script).
@@ -71,7 +72,7 @@ export const sendMessageToGemini = async (
   const apiKey = getApiKey();
   
   if (!apiKey) {
-    throw new Error("API Key configuration missing.");
+    throw new Error("SYSTEM_FAULT: UPLINK_KEY_MISSING");
   }
 
   const ai = new GoogleGenAI({ apiKey });
