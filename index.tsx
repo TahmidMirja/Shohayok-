@@ -8,13 +8,14 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { Message, UserPreferences, DEFAULT_PREFERENCES } from './types';
 import * as Memory from './services/memoryService';
 import { Zap } from 'lucide-react';
+import { TargetHuntCinematic } from './components/TargetHuntCinematic';
 
 const Root: React.FC = () => {
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
   const [showSettings, setShowSettings] = useState(false);
-  const [bootSequence, setBootSequence] = useState(true);
+  const [bootPhase, setBootPhase] = useState<'loading' | 'hunting' | 'ready'>('loading');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ const Root: React.FC = () => {
     const hist = Memory.getHistory();
     setMessages(hist);
     
-    const timer = setTimeout(() => setBootSequence(false), 2000);
+    const timer = setTimeout(() => setBootPhase('hunting'), 2500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -37,7 +38,7 @@ const Root: React.FC = () => {
 
   if (!mounted) return null;
 
-  if (bootSequence) {
+  if (bootPhase === 'loading') {
     return (
       <div className="h-screen w-screen bg-[#080400] flex flex-col items-center justify-center text-holo font-mono">
         <div className="relative mb-8">
@@ -51,6 +52,10 @@ const Root: React.FC = () => {
         <style>{`@keyframes loading { from { width: 0% } to { width: 100% } }`}</style>
       </div>
     );
+  }
+
+  if (bootPhase === 'hunting') {
+    return <TargetHuntCinematic onComplete={() => setBootPhase('ready')} />;
   }
 
   return (

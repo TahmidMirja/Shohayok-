@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Send, Mic } from 'lucide-react';
+import { Send, Mic, ShieldAlert, WifiOff, Activity, RefreshCw } from 'lucide-react';
 import { Message, Role, UserPreferences } from '../types';
 import { HoloCore, SystemLog } from '../components/HolographicUI';
 import * as Gemini from '../services/geminiService';
@@ -24,12 +24,14 @@ export const Page: React.FC<PageProps> = ({
   setStatus 
 }) => {
   const [input, setInput] = useState('');
+  const [errorStatus, setErrorStatus] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = useCallback(async (text: string = input) => {
     const trimmed = text.trim();
     if (!trimmed || status === 'processing') return;
 
+    setErrorStatus(null);
     const userMsg: Message = {
       id: Date.now().toString(),
       role: Role.USER,
@@ -61,17 +63,18 @@ export const Page: React.FC<PageProps> = ({
       if (result.text) {
         setStatus('speaking');
         if (preferences.voiceEnabled) Voice.speak(result.text);
-        const speakTime = Math.min(result.text.length * 65, 6000);
+        const speakTime = Math.min(result.text.length * 70, 8000);
         setTimeout(() => setStatus('idle'), speakTime);
       } else {
         setStatus('idle');
       }
 
     } catch (error: any) {
+      setErrorStatus(error.message);
       const errorMsg: Message = {
         id: Date.now().toString(),
         role: Role.MODEL,
-        content: `UPLINK_FAILURE: ${error.message || "Unknown Connection Loss"}`,
+        content: `CRITICAL_FAULT: ${error.message}`,
         timestamp: Date.now(),
         isError: true
       };
@@ -83,64 +86,82 @@ export const Page: React.FC<PageProps> = ({
   const toggleListening = () => {
     if (status === 'listening') return;
     setStatus('listening');
+    setErrorStatus(null);
+    
     Voice.startListening(
       (text) => handleSend(text),
-      () => setStatus('idle')
+      () => setStatus('idle'),
+      (error) => {
+        setErrorStatus(error);
+        const errorMsg: Message = {
+          id: Date.now().toString(),
+          role: Role.MODEL,
+          content: error,
+          timestamp: Date.now(),
+          isError: true
+        };
+        setMessages(prev => [...prev, errorMsg]);
+      }
     );
   };
 
   const lastMessage = messages[messages.length - 1];
 
   return (
-    <div className="h-full flex flex-col md:flex-row overflow-hidden">
+    <div className="h-full flex flex-col md:flex-row overflow-hidden relative">
       <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
-        <div className="absolute top-10 text-center w-full pointer-events-none">
-          <h1 className="text-3xl font-mono font-black tracking-widest text-white text-glow mb-1 uppercase">
-            {preferences.aiName}
-          </h1>
-          <p className="text-[10px] font-mono tracking-[0.5em] opacity-40 uppercase">
-            {status}
-          </p>
-        </div>
-
         <HoloCore state={status} />
 
-        <div className="w-full max-w-3xl px-8 py-6 bg-holo/5 border-y border-holo/10 text-center min-h-[120px] flex items-center justify-center">
-          {lastMessage ? (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
-              <p className={`font-bangla text-xl md:text-3xl leading-relaxed ${lastMessage.isError ? 'text-danger' : 'text-white text-glow'}`}>
+        <div className={`w-full max-w-4xl px-12 py-8 bg-black/60 border-y-2 text-center min-h-[160px] flex flex-col items-center justify-center backdrop-blur-md relative transition-colors duration-500 ${errorStatus ? 'border-danger shadow-[inset_0_0_30px_rgba(255,68,0,0.1)]' : 'border-danger/30'}`}>
+           <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-danger" />
+           <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-right-2 border-danger" />
+           
+           {errorStatus && (
+             <div className="mb-4 flex items-center gap-2 text-danger font-black text-xs animate-pulse">
+                <WifiOff size={16} />
+                <span>UPLINK_UNSTABLE: {errorStatus.includes('network') ? 'CHECK_CONNECTION' : 'HARDWARE_FAULT'}</span>
+             </div>
+           )}
+
+           {lastMessage ? (
+            <div className="animate-in fade-in zoom-in-95 duration-500 w-full">
+              <p className={`font-mono text-2xl md:text-4xl leading-relaxed tracking-tight ${lastMessage.isError ? 'text-danger' : 'text-slate-100 text-glow-red'}`}>
                 {lastMessage.content}
               </p>
             </div>
           ) : (
-            <p className="text-holo/20 font-mono text-xs tracking-[0.4em] uppercase italic">System Hydrated. Waiting for Command...</p>
+            <div className="flex flex-col items-center gap-2 opacity-30 italic font-mono uppercase tracking-[0.4em] text-xs">
+              <ShieldAlert size={20} className="animate-pulse" />
+              <span>AWAITING_UPLINK_COMMAND</span>
+            </div>
           )}
         </div>
       </div>
 
-      <div className="h-[35vh] md:h-full md:w-80 lg:w-[450px] border-t md:border-t-0 md:border-l border-holo/10 shadow-2xl">
+      <div className="h-[30vh] md:h-full md:w-80 lg:w-[480px] border-t md:border-t-0 md:border-l border-danger/20 shadow-2xl">
         <SystemLog messages={messages} />
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-6 bg-black/90 backdrop-blur-2xl border-t border-holo/20 z-30">
-        <div className="max-w-5xl mx-auto flex items-center gap-4">
+      <div className="absolute bottom-0 left-0 right-0 p-8 z-30">
+        <div className="max-w-4xl mx-auto flex items-center gap-6">
           <button 
             onClick={toggleListening}
-            className={`p-4 border-2 transition-all transform hover:scale-105 ${status === 'listening' ? 'border-danger text-danger bg-danger/10 animate-pulse' : 'border-holo/30 text-holo hover:border-holo bg-white/5'}`}
+            title="ভয়েস কমান্ড"
+            className={`p-5 border-2 transition-all transform hover:scale-110 active:rotate-12 ${status === 'listening' ? 'border-holo text-holo bg-holo/10 animate-pulse shadow-[0_0_20px_rgba(255,140,0,0.4)]' : 'border-danger/40 text-danger hover:border-danger bg-danger/5 shadow-[0_0_15px_rgba(255,68,0,0.1)]'}`}
           >
-            <Mic size={24} />
+            {status === 'listening' ? <Activity size={28} /> : <Mic size={28} />}
           </button>
 
-          <div className="flex-1 flex items-center bg-white/5 border-2 border-white/10 px-6 py-4 focus-within:border-holo/60 transition-all group shadow-inner">
-            <span className="text-holo/60 font-mono mr-4 text-xl group-focus-within:text-holo">CMD></span>
+          <div className="flex-1 flex items-center bg-black/90 border-2 border-danger/30 px-8 py-5 focus-within:border-danger transition-all group t3000-border shadow-[inset_0_0_20px_rgba(255,68,0,0.1)]">
+            <span className="text-danger/60 font-mono mr-5 text-2xl font-black italic animate-pulse">CMD_</span>
             <input
               ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Deploy system command..."
-              className="flex-1 bg-transparent border-none outline-none text-white font-bangla placeholder-holo/10 text-lg"
+              placeholder={errorStatus ? "NETWORK FAULT - USE KEYBOARD..." : "ENTER DIRECTIVE..."}
+              className="flex-1 bg-transparent border-none outline-none text-white font-mono placeholder-white/5 text-xl tracking-wider uppercase"
               disabled={status === 'processing' || status === 'listening'}
             />
           </div>
@@ -148,9 +169,9 @@ export const Page: React.FC<PageProps> = ({
           <button 
             onClick={() => handleSend()}
             disabled={!input.trim() || status === 'processing'}
-            className="p-4 bg-holo/10 border-2 border-holo/40 text-holo hover:bg-holo hover:text-black transition-all disabled:opacity-20 shadow-lg"
+            className="p-5 bg-danger/10 border-2 border-danger/50 text-danger hover:bg-danger hover:text-black transition-all disabled:opacity-20 shadow-[0_0_15px_rgba(255,68,0,0.2)] font-black uppercase tracking-widest"
           >
-            <Send size={24} />
+            <Send size={28} />
           </button>
         </div>
       </div>

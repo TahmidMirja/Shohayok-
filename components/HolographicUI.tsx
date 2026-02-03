@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Activity, Radio, Cpu, Wifi, Zap } from 'lucide-react';
+import { Target, Cpu, Activity, Zap, ShieldAlert } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Message, Role } from '../types';
 
@@ -8,53 +8,75 @@ interface CoreProps {
 }
 
 export const HoloCore: React.FC<CoreProps> = ({ state }) => {
-  let color = "border-holo shadow-[0_0_30px_rgba(255,140,0,0.3)]";
-  let ringColor = "border-holo/30";
-  let coreAnim = "animate-pulse-slow";
-  let Icon = Zap;
-  
+  let color = "border-danger shadow-[0_0_40px_rgba(255,68,0,0.4)]";
+  let Icon = Target;
+  let statusText = "SCANNING";
+
   if (state === 'processing') {
-    color = "border-white shadow-[0_0_50px_rgba(255,255,255,0.4)]";
-    ringColor = "border-white/30";
-    coreAnim = "animate-spin-slow duration-[1.5s]";
+    color = "border-white shadow-[0_0_60px_rgba(255,255,255,0.6)]";
     Icon = Cpu;
+    statusText = "PROCESSING_DATA";
   } else if (state === 'listening') {
-    color = "border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.5)]";
-    ringColor = "border-red-500/30";
-    coreAnim = "animate-pulse-fast";
-    Icon = Radio;
-  } else if (state === 'speaking') {
-    color = "border-success shadow-[0_0_60px_rgba(255,204,0,0.6)]";
-    ringColor = "border-success/30";
-    coreAnim = "animate-pulse duration-[400ms]";
+    color = "border-holo shadow-[0_0_50px_rgba(255,140,0,0.6)] animate-pulse";
     Icon = Activity;
+    statusText = "RECEIVING_INPUT";
+  } else if (state === 'speaking') {
+    color = "border-danger shadow-[0_0_80px_rgba(255,68,0,0.8)]";
+    Icon = Zap;
+    statusText = "TRANSMITTING";
   }
 
   return (
-    <div className="relative flex items-center justify-center w-64 h-64 md:w-80 md:h-80 mx-auto my-8 transition-all duration-700">
-      <div className={`absolute inset-0 rounded-full border border-dashed ${ringColor} animate-spin-reverse`} style={{ animationDuration: '25s' }} />
-      <div className={`absolute inset-6 rounded-full border border-dotted ${ringColor} animate-spin-slow opacity-60`} style={{ animationDuration: '12s' }} />
+    <div className="relative flex items-center justify-center w-72 h-72 md:w-96 md:h-96 mx-auto my-12 group">
+      {/* Structural Scan Layers */}
+      <div className="absolute inset-0 rounded-full border border-danger/10 scale-150 animate-pulse" />
+      <div className="absolute inset-0 rounded-full border-2 border-dashed border-danger/20 animate-spin-slow" style={{ animationDuration: '30s' }} />
+      <div className="absolute inset-8 rounded-full border border-dotted border-white/10 animate-spin-reverse" style={{ animationDuration: '20s' }} />
       
-      <div className={`w-32 h-32 md:w-40 md:h-40 rounded-full border-4 ${color} ${coreAnim} bg-black/90 backdrop-blur-2xl flex items-center justify-center relative z-10 transition-all duration-500`}>
-        <div className="text-center relative">
-           <div className={`absolute inset-0 bg-current opacity-20 blur-2xl rounded-full ${state === 'speaking' ? 'animate-ping' : ''}`}></div>
-           <Icon className={`w-12 h-12 relative z-20 mx-auto transition-colors duration-300 ${
-             state === 'processing' ? 'text-white' :
-             state === 'listening' ? 'text-red-500' :
-             state === 'speaking' ? 'text-success' : 'text-holo'
+      {/* Tactical Grids */}
+      <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-danger/40 to-transparent" />
+      <div className="absolute h-full w-px bg-gradient-to-b from-transparent via-danger/40 to-transparent" />
+      
+      {/* The T-3000 Core */}
+      <div className={`w-40 h-40 md:w-48 md:h-48 rounded-none border-t-2 border-b-2 ${color} bg-black flex items-center justify-center relative z-10 transition-all duration-500 overflow-hidden liquid-metal`}>
+        {/* Animated Internal Data Lines */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+           {[...Array(5)].map((_, i) => (
+             <div key={i} className="h-px w-full bg-white mb-8 animate-pulse" style={{ animationDelay: `${i*0.5}s` }} />
+           ))}
+        </div>
+        
+        <div className="text-center relative z-20">
+           <Icon className={`w-14 h-14 mx-auto mb-2 transition-colors duration-300 ${
+             state === 'processing' ? 'text-white' : 'text-danger'
            }`} />
-           <p className="mt-3 text-[9px] font-mono tracking-[0.4em] uppercase opacity-90 text-white/90">
-             {state.toUpperCase()}
+           <p className="text-[10px] font-mono font-black tracking-[0.4em] uppercase text-danger">
+             {statusText}
            </p>
+           {state === 'speaking' && (
+             <div className="flex gap-1 justify-center mt-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="w-1 h-3 bg-danger animate-bounce" style={{ animationDelay: `${i*0.1}s` }} />
+                ))}
+             </div>
+           )}
         </div>
       </div>
 
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full bg-gradient-to-b from-transparent via-holo/15 to-transparent" />
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-px bg-gradient-to-r from-transparent via-holo/15 to-transparent" />
+      {/* Outer Telemetry Tags */}
+      <div className="absolute top-0 right-0 p-2 text-[8px] font-mono text-holo/60 border border-holo/20 bg-black/80">
+        SYS_TEMP: 32.4°C<br/>
+        NODE_LOAD: 0.12
+      </div>
+      <div className="absolute bottom-0 left-0 p-2 text-[8px] font-mono text-danger/60 border border-danger/20 bg-black/80">
+        TARGET_ACQ: 100%<br/>
+        HUD_VER: 3.0.0
+      </div>
     </div>
   );
 };
 
+// Fixed: Defined LogProps interface which was missing
 interface LogProps {
   messages: Message[];
 }
@@ -63,33 +85,34 @@ export const SystemLog: React.FC<LogProps> = ({ messages }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
   return (
-    <div className="h-full flex flex-col font-mono text-sm border-l border-holo/10 bg-black/60 backdrop-blur-md">
-      <div className="p-3 border-b border-holo/20 flex items-center justify-between bg-holo/10">
+    <div className="h-full flex flex-col font-mono text-sm border-l border-holo/10 bg-black/80 backdrop-blur-2xl">
+      <div className="p-3 border-b border-holo/20 flex items-center justify-between bg-danger/5">
         <div className="flex items-center gap-2">
-           <Wifi size={14} className="text-holo animate-pulse" />
-           <span className="text-xs uppercase tracking-[0.2em] font-bold text-holo">Live Telemetry</span>
+           <ShieldAlert size={14} className="text-danger animate-pulse" />
+           <span className="text-xs uppercase tracking-[0.2em] font-black text-danger">TERMINAL_LOG</span>
         </div>
-        <span className="text-[10px] text-holo/60 font-bold">ORANGE_LINK_v3</span>
+        <span className="text-[10px] text-holo/40 font-bold">CYBERDYNE_LINK</span>
       </div>
       
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 font-bangla custom-scrollbar">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-6 font-mono custom-scrollbar">
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex flex-col ${msg.role === Role.USER ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <span className="text-[10px] text-holo/40 mb-1 font-mono tracking-widest uppercase">
-              {msg.role === Role.USER ? '>> CMD_IN' : '>> SYS_OUT'} [{new Date(msg.timestamp).toLocaleTimeString([], {hour12: false})}]
-            </span>
-            <div className={`max-w-[95%] p-3 rounded-none border-l-4 text-sm leading-relaxed shadow-xl backdrop-blur-sm prose prose-invert prose-sm ${
+          <div key={msg.id} className="flex flex-col animate-in fade-in slide-in-from-right-2 duration-300">
+            <div className="flex items-center gap-2 mb-1">
+               <span className={`text-[9px] px-1 font-black ${msg.role === Role.USER ? 'bg-holo text-black' : 'bg-danger text-black'}`}>
+                  {msg.role === Role.USER ? 'CMD_IN' : 'SYS_OUT'}
+               </span>
+               <span className="text-[9px] text-white/30 italic">[{new Date(msg.timestamp).toLocaleTimeString([], {hour12: false})}]</span>
+            </div>
+            <div className={`p-3 border-l-2 text-xs leading-relaxed transition-all ${
               msg.role === Role.USER 
-                ? 'border-holo bg-holo/20 text-holo text-glow' 
+                ? 'border-holo bg-holo/5 text-holo' 
                 : msg.isError 
-                  ? 'border-danger bg-danger/20 text-danger'
-                  : 'border-white/50 text-slate-200 bg-white/5'
+                  ? 'border-danger bg-danger/20 text-danger animate-pulse'
+                  : 'border-white/20 text-slate-100 bg-white/5'
             }`}>
               <ReactMarkdown>{msg.content}</ReactMarkdown>
             </div>

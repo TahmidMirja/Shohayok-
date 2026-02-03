@@ -95,9 +95,21 @@ const App: React.FC = () => {
   const toggleListening = () => {
     if (status === 'listening') return;
     setStatus('listening');
+    // Fix: Added missing error callback argument to satisfy Voice.startListening signature (Expected 3 arguments, but got 2)
     Voice.startListening(
       (text) => handleSend(text),
-      () => setStatus('idle')
+      () => setStatus('idle'),
+      (error) => {
+        const errorMsg: Message = {
+          id: Date.now().toString(),
+          role: Role.MODEL,
+          content: `VOICE_FAULT: ${error}`,
+          timestamp: Date.now(),
+          isError: true
+        };
+        setMessages(prev => [...prev, errorMsg]);
+        setStatus('idle');
+      }
     );
   };
 

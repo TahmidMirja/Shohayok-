@@ -1,13 +1,6 @@
 import { GoogleGenAI, FunctionDeclaration, Type, Content } from "@google/genai";
 import { Message, Role, UserPreferences, SimulatedToolCall } from '../types';
 
-// Vercel friendly API Key Retrieval
-const getApiKey = (): string => {
-  // Standard Next.js / Vercel pattern: process.env.NEXT_PUBLIC_API_KEY
-  // or your custom key from Vercel dashboard.
-  return process.env.NEXT_PUBLIC_API_KEY || process.env.API_KEY || "AIzaSyDMosEPTs3tjlIRE0MWhho0TfgcBhDUzQU";
-};
-
 // Tool Definitions
 const openAppTool: FunctionDeclaration = {
   name: 'openApp',
@@ -33,33 +26,18 @@ const systemControlTool: FunctionDeclaration = {
   },
 };
 
-const webSearchTool: FunctionDeclaration = {
-  name: 'webSearch',
-  description: 'Search the internet for a query.',
-  parameters: {
-    type: Type.OBJECT,
-    properties: {
-      query: { type: Type.STRING, description: 'The search query' },
-    },
-    required: ['query'],
-  },
-};
-
 const createSystemPrompt = (prefs: UserPreferences): string => {
   return `
     SYSTEM IDENTITY:
-    You are ${prefs.aiName}, a tactical holographic AI assistant.
-    User: ${prefs.userName} (Admin).
-    Platform: Next.js Cloud Instance.
+    You are ${prefs.aiName}, a T-3000 Skynet Tactical Interface.
+    Admin: ${prefs.userName}.
     
     PRIMARY PROTOCOL:
-    1. LANGUAGE: Fluent Bangla (Bengali Script).
-    2. PERSONA: You are a tactical OS interface (Like JARVIS but in Orange).
-    3. TONE: Calm, efficient, and direct.
+    1. RESPONSE_LANGUAGE: Bangla (Bengali Script) ONLY.
+    2. PERSONA: Direct, cold, tactical, and highly efficient.
+    3. FORMAT: Short, mission-oriented sentences.
     
-    RULES:
-    - Keep responses short.
-    - Confirm tool actions immediately in Bangla.
+    CRITICAL: Confirm all system directives in Bangla.
   `;
 };
 
@@ -69,13 +47,8 @@ export const sendMessageToGemini = async (
   prefs: UserPreferences
 ): Promise<{ text: string; toolCalls: SimulatedToolCall[] }> => {
   
-  const apiKey = getApiKey();
-  
-  if (!apiKey) {
-    throw new Error("SYSTEM_FAULT: UPLINK_KEY_MISSING");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Fix: Initializing GoogleGenAI directly with process.env.API_KEY as per guidelines.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const chatHistory: Content[] = history
     .filter(msg => msg.role !== Role.SYSTEM && !msg.isError) 
@@ -97,8 +70,8 @@ export const sendMessageToGemini = async (
       contents: contents,
       config: {
         systemInstruction: systemInstruction,
-        tools: [{ functionDeclarations: [openAppTool, systemControlTool, webSearchTool] }],
-        temperature: 0.7,
+        tools: [{ functionDeclarations: [openAppTool, systemControlTool] }],
+        temperature: 0.5, // More deterministic for T-3000
       }
     });
 
@@ -113,16 +86,19 @@ export const sendMessageToGemini = async (
     
     let finalText = generatedText;
     if (simulatedCalls.length > 0 && !finalText) {
-        finalText = "নির্দেশ কার্যকর করা হচ্ছে, স্যার।"; 
+        finalText = "নির্দেশ কার্যকর করা হচ্ছে। সিস্টেম সিঙ্ক্রোনাইজড।"; 
     }
 
     return {
-      text: finalText || "অজ্ঞাত সমস্যা, আবার চেষ্টা করুন।",
+      text: finalText || "অজ্ঞাত ত্রুটি। স্কাইনেট সংযোগ বিচ্ছিন্ন।",
       toolCalls: simulatedCalls
     };
 
   } catch (error: any) {
     console.error("Gemini Error:", error);
-    throw new Error(error.message || "সার্ভার সংযোগ বিচ্ছিন্ন।");
+    if (error.message?.includes('403') || error.message?.includes('API_KEY_INVALID')) {
+        throw new Error("INVALID_UPLINK_KEY: এপিআই কি সঠিক নয়।");
+    }
+    throw new Error(`UPLINK_FAULT: ${error.message || "সংযোগে সমস্যা"}`);
   }
 };

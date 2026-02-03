@@ -1,52 +1,67 @@
-// Simple wrapper for Web Speech API
+// Robust wrapper for Web Speech API with T-3000 fault tolerance
 
-export const speak = (text: string, voiceURI?: string) => {
+export const speak = (text: string) => {
   if (!window.speechSynthesis) return;
   
-  // Cancel previous
   window.speechSynthesis.cancel();
-
   const utterance = new SpeechSynthesisUtterance(text);
   
-  // Try to find a Bangla voice if available, otherwise default
   const voices = window.speechSynthesis.getVoices();
-  const banglaVoice = voices.find(v => v.lang.includes('bn'));
+  // Primary: Google Bangla, Secondary: Any Bangla, Tertiary: Default
+  const banglaVoice = voices.find(v => v.lang === 'bn-BD') || 
+                      voices.find(v => v.lang.includes('bn'));
   
   if (banglaVoice) {
     utterance.voice = banglaVoice;
     utterance.lang = banglaVoice.lang;
+  } else {
+    utterance.lang = 'bn-BD';
   }
 
   utterance.rate = 1.0;
-  utterance.pitch = 1.0;
+  utterance.pitch = 0.9; // Slightly deeper T-3000 tone
   
   window.speechSynthesis.speak(utterance);
 };
 
 export const startListening = (
   onResult: (text: string) => void,
-  onEnd: () => void
-): any => { // Returns recognition instance
+  onEnd: () => void,
+  onError: (error: string) => void
+): any => {
   const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   
   if (!SpeechRecognition) {
-    alert("Voice input not supported in this browser.");
+    onError("SPEECH_ENGINE_NOT_FOUND: আপনার ব্রাউজার স্পিচ রিকগনিশন সাপোর্ট করে না।");
     onEnd();
     return null;
   }
 
   const recognition = new SpeechRecognition();
-  recognition.lang = 'bn-BD'; // Default to Bangla (Bangladesh)
+  recognition.lang = 'bn-BD';
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
+  recognition.continuous = false;
 
   recognition.onresult = (event: any) => {
-    const text = event.results[0][0].transcript;
-    onResult(text);
+    if (event.results && event.results[0]) {
+      const text = event.results[0][0].transcript;
+      onResult(text);
+    }
   };
 
   recognition.onerror = (event: any) => {
-    console.error("Speech recognition error", event.error);
+    let errorMessage = `VOICE_FAULT: ${event.error}`;
+    
+    if (event.error === 'network') {
+      errorMessage = "UPLINK_FAILURE: ইন্টারনেট সংযোগে সমস্যা। ভয়েস সার্ভার ডিসকানেক্টেড।";
+    } else if (event.error === 'not-allowed') {
+      errorMessage = "ACCESS_DENIED: মাইক্রোফোন ব্যবহারের অনুমতি নেই।";
+    } else if (event.error === 'no-speech') {
+      errorMessage = "NO_INPUT_DETECTED: কোন শব্দ শোনা যাচ্ছে না।";
+    }
+    
+    onError(errorMessage);
     onEnd();
   };
 
@@ -54,6 +69,12 @@ export const startListening = (
     onEnd();
   };
 
-  recognition.start();
+  try {
+    recognition.start();
+  } catch (e) {
+    onError("RECOGNITION_INIT_FAILED: সিস্টেম রিস্টার্ট করুন।");
+    onEnd();
+  }
+  
   return recognition;
 };

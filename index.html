@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shohayok AI - Tactical Orange System</title>
+    <title>T-3000 Tactical Interface</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
-      // POLYFILL: Injecting API Key provided by user into the environment
-      window.process = {
-        env: {
-          API_KEY: "AIzaSyDMosEPTs3tjlIRE0MWhho0TfgcBhDUzQU"
-        }
-      };
+      // Global Environment Polyfill for Browser SDK
+      window.process = window.process || { env: {} };
+      // This will be overwritten by Vercel's build process or the hardcoded key below
+      if (!window.process.env.API_KEY) {
+        window.process.env.API_KEY = "AIzaSyDMosEPTs3tjlIRE0MWhho0TfgcBhDUzQU"; 
+      }
 
       tailwind.config = {
         theme: {
@@ -20,87 +20,30 @@
             fontFamily: {
               sans: ['Rajdhani', 'sans-serif'],
               mono: ['Orbitron', 'monospace'],
-              bangla: ['Hind Siliguri', 'sans-serif'],
             },
             colors: {
-              holo: '#ff8c00', // Vibrant Orange
-              holoDim: 'rgba(255, 140, 0, 0.1)',
-              holoDark: '#0a0500', // Deep Warm Black
-              danger: '#ff4500',
-              success: '#ffcc00', // Gold/Success Amber
+              holo: '#ff8c00', 
+              danger: '#ff4400',
+              success: '#00ff44',
             },
             animation: {
-              'spin-slow': 'spin 10s linear infinite',
-              'spin-reverse': 'spin 15s linear infinite reverse',
-              'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'scanline': 'scanline 8s linear infinite',
-              'glitch': 'glitch 1s linear infinite',
-            },
-            keyframes: {
-              scanline: {
-                '0%': { transform: 'translateY(-100%)' },
-                '100%': { transform: 'translateY(100%)' },
-              },
-              glitch: {
-                '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
-                '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
-                '62%': { transform: 'translate(0,0) skew(5deg)' },
-              }
+              'spin-slow': 'spin 15s linear infinite',
+              'spin-reverse': 'spin 20s linear infinite reverse',
             }
           },
         },
       }
     </script>
     <style>
-      body {
-        background-color: #080400;
-        color: #ff8c00;
-        overflow: hidden;
-      }
+      body { background-color: #050200; color: #ff5500; overflow: hidden; }
       .bg-grid {
-        background-image: 
-          linear-gradient(rgba(255, 140, 0, 0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 140, 0, 0.04) 1px, transparent 1px);
-        background-size: 50px 50px;
+        background-image: radial-gradient(circle, rgba(255, 68, 0, 0.1) 1px, transparent 1px);
+        background-size: 40px 40px;
         position: absolute;
         inset: 0;
         z-index: -1;
       }
-      .bg-radial {
-        background: radial-gradient(circle at center, rgba(255, 140, 0, 0.07) 0%, transparent 75%);
-      }
-      .text-glow {
-        text-shadow: 0 0 12px rgba(255, 140, 0, 0.8);
-      }
-      .border-glow {
-        box-shadow: 0 0 20px rgba(255, 140, 0, 0.15), inset 0 0 10px rgba(255, 140, 0, 0.05);
-      }
-      .scanline::before {
-        content: " ";
-        display: block;
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background: linear-gradient(rgba(18, 10, 0, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 100, 0, 0.04), rgba(255, 200, 0, 0.01), rgba(255, 50, 0, 0.04));
-        z-index: 10;
-        background-size: 100% 2px, 3px 100%;
-        pointer-events: none;
-      }
-      /* Scrollbar Customization for Orange */
-      ::-webkit-scrollbar {
-        width: 4px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #110800;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #4d2a00;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #ff8c00;
-      }
+      .text-glow-red { text-shadow: 0 0 15px rgba(255, 68, 0, 0.8); }
     </style>
   <script type="importmap">
 {
@@ -115,7 +58,7 @@
 }
 </script>
 </head>
-  <body class="scanline">
+  <body>
     <div id="root"></div>
   </body>
 </html>
