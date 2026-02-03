@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Mic, Settings, Power, Terminal, Shield, Cpu, AlertTriangle } from 'lucide-react';
+import { Send, Mic, Settings, Power, Terminal, Shield, Cpu, Zap } from 'lucide-react';
 import { Message, Role, UserPreferences, DEFAULT_PREFERENCES } from './types';
 import { SettingsPanel } from './components/SettingsPanel';
 import { HoloCore, SystemLog } from './components/HolographicUI';
@@ -24,7 +24,7 @@ const App: React.FC = () => {
     setMessages(hist);
     
     // Boot Sequence Effect
-    setTimeout(() => setBootSequence(false), 2500);
+    setTimeout(() => setBootSequence(false), 2200);
   }, []);
 
   const handleSend = async (text: string = input) => {
@@ -62,8 +62,7 @@ const App: React.FC = () => {
         if (preferences.voiceEnabled) {
           Voice.speak(response.text);
         }
-        // Reset status after a delay estimated by text length
-        setTimeout(() => setStatus('idle'), Math.min(response.text.length * 50, 5000));
+        setTimeout(() => setStatus('idle'), Math.min(response.text.length * 60, 6000));
       } else {
         setStatus('idle');
       }
@@ -73,14 +72,14 @@ const App: React.FC = () => {
       const errorMsg: Message = {
         id: Date.now().toString(),
         role: Role.MODEL,
-        content: `WARNING: ${error.message || "Connection Failed"}.`,
+        content: `CRITICAL ERROR: ${error.message || "UPLINK_FAILURE"}`,
         timestamp: Date.now(),
         isError: true
       };
       setMessages(prev => [...prev, errorMsg]);
       setStatus('idle');
     } finally {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setTimeout(() => inputRef.current?.focus(), 150);
     }
   };
 
@@ -104,50 +103,55 @@ const App: React.FC = () => {
 
   if (bootSequence) {
     return (
-      <div className="h-screen w-screen bg-black flex flex-col items-center justify-center text-holo font-mono">
-        <div className="w-64 h-2 bg-gray-900 rounded-full overflow-hidden mb-4 border border-holo/30">
-          <div className="h-full bg-holo animate-[width_2s_ease-out_forwards] w-full shadow-[0_0_15px_#00f3ff]" style={{width: '0%', animationName: 'loading'}}></div>
-        </div>
-        <div className="space-y-1 text-xs tracking-[0.2em] text-center opacity-80">
-           <p className="animate-pulse">INITIALIZING CORE SYSTEMS...</p>
-           <p className="delay-75">LOADING NEURAL INTERFACE...</p>
-           <p className="delay-150 text-success">SECURE CONNECTION ESTABLISHED</p>
+      <div className="h-screen w-screen bg-[#080400] flex flex-col items-center justify-center text-holo font-mono relative overflow-hidden">
+        <div className="bg-grid opacity-20" />
+        <div className="relative z-10 flex flex-col items-center">
+            <Zap className="mb-8 w-16 h-16 text-holo animate-pulse" />
+            <div className="w-80 h-1 bg-holo/10 rounded-full overflow-hidden mb-6 border border-holo/20">
+              <div className="h-full bg-holo shadow-[0_0_20px_#ff8c00]" style={{width: '0%', animation: 'loading 2s ease-in-out forwards'}}></div>
+            </div>
+            <div className="space-y-2 text-[10px] tracking-[0.4em] text-center font-bold">
+               <p className="animate-pulse">MOUNTING TACTICAL_INTERFACES...</p>
+               <p className="opacity-60">SYNCHRONIZING NEURAL_BUFFERS...</p>
+               <p className="text-success glow-text">ORANGE_LINK ESTABLISHED</p>
+            </div>
         </div>
         <style>{`
           @keyframes loading {
             0% { width: 0% }
             100% { width: 100% }
           }
+          .glow-text { text-shadow: 0 0 10px #ffcc00; }
         `}</style>
       </div>
     );
   }
 
   return (
-    <div className={`h-screen w-screen flex flex-col font-sans overflow-hidden bg-black text-holo relative`}>
+    <div className={`h-screen w-screen flex flex-col font-sans overflow-hidden bg-[#080400] text-holo relative`}>
       {/* Background Elements */}
-      <div className="bg-grid opacity-30" />
+      <div className="bg-grid opacity-40" />
       <div className="bg-radial absolute inset-0 pointer-events-none" />
 
       {/* Header HUD */}
-      <header className="h-16 flex items-center justify-between px-6 border-b border-holo/20 bg-holo/5 backdrop-blur-sm relative z-20">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Shield className="text-holo animate-pulse-slow" size={20} />
-            <span className="font-mono font-bold tracking-[0.2em] text-lg text-glow">SHOHAYOK OS</span>
+      <header className="h-14 flex items-center justify-between px-6 border-b border-holo/20 bg-holo/5 backdrop-blur-md relative z-20">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <Shield className="text-holo animate-pulse-slow" size={22} />
+            <span className="font-mono font-black tracking-[0.3em] text-xl text-glow uppercase">Tactical AI</span>
           </div>
-          <div className="hidden md:flex gap-4 ml-8 text-[10px] font-mono text-holo/60">
-             <div className="flex items-center gap-1"><Cpu size={12}/> MEM: 24TB</div>
-             <div className="flex items-center gap-1"><Terminal size={12}/> V.3.1.0</div>
+          <div className="hidden lg:flex gap-6 ml-10 text-[11px] font-mono text-holo/50 uppercase font-bold tracking-widest">
+             <div className="flex items-center gap-2 border-r border-holo/20 pr-6"><Cpu size={14}/> CORE: NOMINAL</div>
+             <div className="flex items-center gap-2"><Terminal size={14}/> OS: Ver_3.2-AMBER</div>
           </div>
         </div>
         
-        <div className="flex items-center gap-4">
-          <button onClick={handleClearHistory} className="hover:text-danger transition-colors" title="Purge Memory">
-             <Power size={18} />
+        <div className="flex items-center gap-6">
+          <button onClick={handleClearHistory} className="hover:text-white transition-all transform hover:scale-110" title="Flush Cache">
+             <Power size={20} />
           </button>
-          <button onClick={() => setShowSettings(true)} className="hover:text-white transition-colors animate-spin-slow hover:animate-none">
-             <Settings size={18} />
+          <button onClick={() => setShowSettings(true)} className="hover:text-white transition-all animate-spin-slow hover:animate-none">
+             <Settings size={20} />
           </button>
         </div>
       </header>
@@ -156,65 +160,69 @@ const App: React.FC = () => {
       <main className="flex-1 flex flex-col md:flex-row relative z-10 overflow-hidden">
         
         {/* Left: Visualization Core */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 relative">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
           
-          {/* Status Text */}
-          <div className="absolute top-8 left-0 right-0 text-center pointer-events-none">
-            <h2 className="text-3xl font-bold font-mono text-white text-glow tracking-wider uppercase mb-2">
+          {/* Status HUD Text */}
+          <div className="absolute top-10 left-0 right-0 text-center pointer-events-none z-0">
+            <h2 className="text-4xl font-black font-mono text-white text-glow tracking-[0.1em] uppercase mb-3 opacity-90">
               {preferences.aiName}
             </h2>
-            <p className="text-sm font-mono text-holo/70 tracking-[0.3em] uppercase animate-pulse">
-              {status === 'idle' ? 'SYSTEM ONLINE - AWAITING INPUT' : 
-               status === 'listening' ? 'LISTENING TO AUDIO STREAM...' :
-               status === 'processing' ? 'PROCESSING DATA...' : 'AUDIO OUTPUT ACTIVE'}
-            </p>
+            <div className="flex items-center justify-center gap-4">
+                <div className="h-[2px] w-12 bg-holo/20"></div>
+                <p className="text-[11px] font-mono text-holo/80 tracking-[0.5em] uppercase font-bold">
+                  {status === 'idle' ? 'STANDBY_MODE_ACTIVE' : 
+                   status === 'listening' ? 'CAPTURING_AUDIO_WAVES' :
+                   status === 'processing' ? 'PARSING_COMMANDS' : 'RELAYING_RESPONSE'}
+                </p>
+                <div className="h-[2px] w-12 bg-holo/20"></div>
+            </div>
           </div>
 
           <HoloCore state={status} />
 
-          {/* Last Response Display (Heads Up) */}
-          <div className="w-full max-w-2xl text-center min-h-[100px] flex items-center justify-center p-4">
+          {/* Last Response Display */}
+          <div className="w-full max-w-3xl text-center min-h-[120px] flex items-center justify-center p-6 bg-holo/5 border-y border-holo/10 backdrop-blur-sm mt-4">
             {messages.length > 0 ? (
-               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <p className="font-bangla text-lg md:text-2xl text-white drop-shadow-[0_0_5px_rgba(0,243,255,0.5)] leading-relaxed">
-                    "{messages[messages.length - 1].role === Role.MODEL 
+               <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+                  <p className="font-bangla text-xl md:text-3xl text-white text-glow leading-relaxed font-medium">
+                    {messages[messages.length - 1].role === Role.MODEL 
                       ? messages[messages.length - 1].content 
-                      : messages[messages.length - 1].isError ? 'SYSTEM FAILURE' : 'Processing...'}"
+                      : messages[messages.length - 1].isError ? 'COMM_LINK_DOWN' : 'INTERPRETING...'}
                   </p>
                </div>
             ) : (
-              <p className="text-holo/40 font-mono text-sm">INITIALIZING PROTOCOLS...</p>
+              <p className="text-holo/30 font-mono text-sm tracking-[0.2em]">INITIALIZING SUBSYSTEMS...</p>
             )}
           </div>
         </div>
 
-        {/* Right: System Log (Chat History) */}
-        <div className="h-[30vh] md:h-full md:w-96 border-t md:border-t-0 md:border-l border-holo/20 bg-black/60">
+        {/* Right: System Log */}
+        <div className="h-[35vh] md:h-full md:w-[400px] border-t md:border-t-0 md:border-l border-holo/20 shadow-2xl">
           <SystemLog messages={messages} />
         </div>
 
       </main>
 
-      {/* Footer / Input Command Line */}
-      <footer className="p-4 bg-black/80 backdrop-blur border-t border-holo/30 relative z-20">
-        <div className="max-w-4xl mx-auto flex items-center gap-4">
+      {/* Footer / Input HUD */}
+      <footer className="p-6 bg-[#0a0500]/95 backdrop-blur-xl border-t-2 border-holo/20 relative z-20">
+        <div className="max-w-5xl mx-auto flex items-center gap-6">
           <button 
             onClick={toggleListening}
-            className={`p-3 border border-holo/30 rounded-sm transition-all hover:bg-holo/10 ${status === 'listening' ? 'text-danger border-danger animate-pulse' : 'text-holo'}`}
+            className={`p-4 border-2 transition-all transform hover:scale-105 ${status === 'listening' ? 'text-danger border-danger animate-pulse bg-danger/10' : 'text-holo border-holo/40 hover:border-holo bg-holo/5'}`}
           >
-            <Mic size={20} />
+            <Mic size={24} />
           </button>
 
-          <div className="flex-1 flex items-center bg-holo/5 border border-holo/30 rounded-sm px-4 py-2 hover:border-holo/60 transition-colors focus-within:bg-holo/10 focus-within:border-holo">
-            <span className="text-holo/50 mr-2 font-mono">{'>'}</span>
+          <div className="flex-1 flex items-center bg-white/5 border-2 border-white/10 px-6 py-3 hover:border-holo/50 transition-all focus-within:border-holo focus-within:bg-white/10 group shadow-inner">
+            <span className="text-holo font-mono font-bold mr-4 text-lg group-focus-within:animate-pulse">CMD></span>
             <input
               ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="ENTER COMMAND..."
-              className="flex-1 bg-transparent border-none outline-none text-white font-bangla placeholder-holo/30"
+              placeholder="ENTER SYSTEM DIRECTIVE..."
+              className="flex-1 bg-transparent border-none outline-none text-white font-bangla text-lg placeholder-holo/20 tracking-wide"
               disabled={status === 'processing' || status === 'listening'}
               autoComplete="off"
             />
@@ -223,9 +231,9 @@ const App: React.FC = () => {
           <button 
             onClick={() => handleSend()}
             disabled={!input.trim()}
-            className="p-3 bg-holo/10 border border-holo/30 text-holo hover:bg-holo/20 hover:text-white hover:border-white transition-all rounded-sm disabled:opacity-50"
+            className="p-4 bg-holo/10 border-2 border-holo/40 text-holo hover:bg-holo hover:text-black transition-all disabled:opacity-30 shadow-[0_0_15px_rgba(255,140,0,0.1)]"
           >
-            <Send size={20} />
+            <Send size={24} />
           </button>
         </div>
       </footer>

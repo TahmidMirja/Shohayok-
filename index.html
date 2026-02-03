@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shohayok AI - Holographic System</title>
+    <title>Shohayok AI - Tactical Orange System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -23,11 +23,11 @@
               bangla: ['Hind Siliguri', 'sans-serif'],
             },
             colors: {
-              holo: '#00f3ff', // Cyan Neon
-              holoDim: 'rgba(0, 243, 255, 0.1)',
-              holoDark: '#000a12',
-              danger: '#ff003c',
-              success: '#00ff9d',
+              holo: '#ff8c00', // Vibrant Orange
+              holoDim: 'rgba(255, 140, 0, 0.1)',
+              holoDark: '#0a0500', // Deep Warm Black
+              danger: '#ff4500',
+              success: '#ffcc00', // Gold/Success Amber
             },
             animation: {
               'spin-slow': 'spin 10s linear infinite',
@@ -53,27 +53,27 @@
     </script>
     <style>
       body {
-        background-color: #000508;
-        color: #00f3ff;
+        background-color: #080400;
+        color: #ff8c00;
         overflow: hidden;
       }
       .bg-grid {
         background-image: 
-          linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
-        background-size: 40px 40px;
+          linear-gradient(rgba(255, 140, 0, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 140, 0, 0.04) 1px, transparent 1px);
+        background-size: 50px 50px;
         position: absolute;
         inset: 0;
         z-index: -1;
       }
       .bg-radial {
-        background: radial-gradient(circle at center, rgba(0, 243, 255, 0.05) 0%, transparent 70%);
+        background: radial-gradient(circle at center, rgba(255, 140, 0, 0.07) 0%, transparent 75%);
       }
       .text-glow {
-        text-shadow: 0 0 10px rgba(0, 243, 255, 0.7);
+        text-shadow: 0 0 12px rgba(255, 140, 0, 0.8);
       }
       .border-glow {
-        box-shadow: 0 0 15px rgba(0, 243, 255, 0.2), inset 0 0 10px rgba(0, 243, 255, 0.1);
+        box-shadow: 0 0 20px rgba(255, 140, 0, 0.15), inset 0 0 10px rgba(255, 140, 0, 0.05);
       }
       .scanline::before {
         content: " ";
@@ -83,23 +83,23 @@
         left: 0;
         bottom: 0;
         right: 0;
-        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        background: linear-gradient(rgba(18, 10, 0, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 100, 0, 0.04), rgba(255, 200, 0, 0.01), rgba(255, 50, 0, 0.04));
         z-index: 10;
         background-size: 100% 2px, 3px 100%;
         pointer-events: none;
       }
-      /* Scrollbar */
+      /* Scrollbar Customization for Orange */
       ::-webkit-scrollbar {
         width: 4px;
       }
       ::-webkit-scrollbar-track {
-        background: #000a12;
+        background: #110800;
       }
       ::-webkit-scrollbar-thumb {
-        background: #004d52;
+        background: #4d2a00;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #00f3ff;
+        background: #ff8c00;
       }
     </style>
   <script type="importmap">
