@@ -1,0 +1,7 @@
+{
+  "name": "Shohayok - Personal Bangla AI",
+  "description": "An intelligent, adaptive, and fully customizable Bangla AI assistant with simulated PC automation capabilities and persistent memory.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
